@@ -1,0 +1,4 @@
+include LICENSE README.md pyproject.toml
+recursive-include src *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portazgo"
+version = "0.1.0"
+description = "Pluggable agent SDK to talk to Llama Stack using a cohort of agents (default Llama Stack Responses API or LangGraph)"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+authors = [
+    { name = "Alpha Hack Program" }
+]
+keywords = ["rag", "ragas", "llama-stack", "langgraph", "agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "httpx",
+    # Pin to 0.3.x for compatibility with Llama Stack server 0.3.5.x (426 if client is 0.5.x).
+    "llama-stack-client>=0.3.5,<0.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+    "build>=1.0",
+    "python-dotenv>=1.0",
+]
+langgraph = [
+    "langgraph>=0.2",
+]
+
+[project.urls]
+Repository = "https://github.com/alpha-hack-program/llama-stack-demo"
+Documentation = "https://github.com/alpha-hack-program/llama-stack-demo#readme"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+# Use: uv sync --extra dev  for development. Optional: uv lock for lockfile.
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/cohorte"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = ["raise NotImplementedError", "if TYPE_CHECKING:"]
