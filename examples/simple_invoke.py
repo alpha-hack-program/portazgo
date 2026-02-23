@@ -25,7 +25,7 @@ from llama_stack_client import LlamaStackClient
 
 try:
     from dotenv import load_dotenv
-    # Load .env from cohorte root (parent of examples/) so it works when run via scripts/simple_invoke.sh
+    # Load .env from portazgo root (parent of examples/) so it works when run via scripts/simple_invoke.sh
     _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     load_dotenv(_env_path)
     load_dotenv()  # also current working directory
@@ -39,10 +39,10 @@ logging.basicConfig(
     format="%(levelname)s:%(name)s:%(message)s",
 )
 
-# Add src so cohorte is importable when run from repo
+# Add src so portazgo is importable when run from repo
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from cohorte import Agent
+from portazgo import Agent
 
 
 def discover_mcp_tools(client: LlamaStackClient, tools: str) -> list[dict[str, Any]]:

@@ -1,7 +1,7 @@
 # Copyright 2025 IBM, Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
-from cohorte.chats import format_history_as_prefix
+from portazgo.chats import format_history_as_prefix
 
 
 def test_format_history_empty():

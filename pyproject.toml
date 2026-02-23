@@ -68,7 +68,7 @@ pythonpath = ["src"]
 addopts = "-v --tb=short"
 
 [tool.coverage.run]
-source = ["src/cohorte"]
+source = ["src/portazgo"]
 branch = true
 
 [tool.coverage.report]

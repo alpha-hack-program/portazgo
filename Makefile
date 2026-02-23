@@ -1,5 +1,5 @@
-# cohorte library – common targets (uv)
-# Use from cohorte directory: make lint, make test, make build, etc.
+# portazgo library – common targets (uv)
+# Use from portazgo directory: make lint, make test, make build, etc.
 #
 # Publish (uv publish):
 #   make publish-dev   → TestPyPI (UV_PUBLISH_TOKEN=<testpypi-token>)
@@ -34,7 +34,7 @@ test:
 	$(UV) run pytest tests
 
 coverage:
-	$(UV) run pytest tests --cov=cohorte --cov-report=term-missing
+	$(UV) run pytest tests --cov=portazgo --cov-report=term-missing
 
 build:
 	$(UV) run python -m build

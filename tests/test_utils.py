@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-from cohorte.utils import extract_tool_calls, serialize_for_json, strip_think_blocks
+from portazgo.utils import extract_tool_calls, serialize_for_json, strip_think_blocks
 
 
 class TestStripThinkBlocks:

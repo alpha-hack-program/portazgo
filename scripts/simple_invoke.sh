@@ -2,7 +2,7 @@
 # Get APPS_DOMAIN from OpenShift (oc), set LLAMA_STACK_HOST, then run the simple_invoke example.
 # Arguments = the question to ask the agent (not the script path).
 #
-# Usage (from cohorte):
+# Usage (from portazgo):
 #   ./scripts/run_invoke_oc.sh "What is 2+2?"
 #   ./scripts/run_invoke_oc.sh "Tell me about taxes in Lysmark."
 #   ./scripts/run_invoke_oc.sh                    # uses default question

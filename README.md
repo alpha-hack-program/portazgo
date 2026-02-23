@@ -1,13 +1,13 @@
-# cohorte
+# portazgo
 
-Pluggable agent backends for RAGAS dataset generation. Use the **default** backend (Llama Stack Responses API) or a **lang-graph** backend (stub for future implementation).
+Pluggable agent SDK to talk to Llama Stack using different agentic frameworks. Use the **default** backend (Llama Stack Responses API) or a **lang-graph** backend (stub for future implementation).
 
 ## Installation
 
 From source with **uv** (recommended):
 
 ```bash
-cd cohorte
+cd portazgo
 uv sync --extra dev
 ```
 
@@ -26,7 +26,7 @@ pip install -e .
 For PyPI (once published):
 
 ```bash
-pip install cohorte
+pip install portazgo
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ pip install cohorte
 ### Agent with type
 
 ```python
-from cohorte import Agent
+from portazgo import Agent
 
 # Default: Llama Stack Responses API (same as ragas_pipeline / ragas_dataset_generator)
 agent = Agent(type="default")
@@ -53,7 +53,7 @@ ragas_dataset = agent.generate_ragas_dataset(
 Same parameter shape as `generate_ragas_dataset`, but for one input. The name follows **LangChain/LangGraph** (`agent.invoke(input)`):
 
 ```python
-from cohorte import Agent
+from portazgo import Agent
 
 agent = Agent(type="default")
 result = agent.invoke(
@@ -112,7 +112,7 @@ for event in agent.invoke_stream(
 
 ```python
 import streamlit as st
-from cohorte import Agent
+from portazgo import Agent
 
 # Init session state
 if "messages" not in st.session_state:
@@ -160,7 +160,7 @@ agent = Agent(type="lang-graph")
 The library also exposes helpers used by the default backend, useful for custom pipelines:
 
 ```python
-from cohorte import strip_think_blocks, serialize_for_json, extract_tool_calls
+from portazgo import strip_think_blocks, serialize_for_json, extract_tool_calls
 ```
 
 - `strip_think_blocks(text)` – remove `<think>...</think>` blocks from model output.
@@ -173,7 +173,7 @@ from cohorte import strip_think_blocks, serialize_for_json, extract_tool_calls
 Runs `invoke` against a mock client so you can confirm the API shape:
 
 ```bash
-cd cohorte
+cd portazgo
 uv run pytest tests/test_agent.py -v -k invoke
 ```
 
@@ -181,7 +181,7 @@ uv run pytest tests/test_agent.py -v -k invoke
 Use the example script (requires a running Llama Stack and a vector store):
 
 ```bash
-cd cohorte
+cd portazgo
 export LLAMA_STACK_HOST=localhost
 export LLAMA_STACK_PORT=8080
 # optional: AGENT_VECTOR_STORE_NAME=rag-store, AGENT_MODEL_ID="your/model"
@@ -195,7 +195,7 @@ You can pass any question as arguments; default is `"What is 2+2?"`.
 If Llama Stack is exposed on OpenShift, use the helper script to get `APPS_DOMAIN` and run the example:
 
 ```bash
-cd cohorte
+cd portazgo
 ./scripts/run_invoke_oc.sh "What is 2+2?"
 ```
 
@@ -203,7 +203,7 @@ The script sources `.env` (for `PROJECT`, etc.), runs `oc get ingresses.config.o
 
 ## Development
 
-Uses [uv](https://docs.astral.sh/uv/) for the venv and running tools. From the cohorte directory:
+Uses [uv](https://docs.astral.sh/uv/) for the venv and running tools. From the portazgo directory:
 
 - **Create venv and install deps:** `make install-dev` (or `uv sync --extra dev`)
 - **Lock dependencies:** `make lock` (or `uv lock`)
