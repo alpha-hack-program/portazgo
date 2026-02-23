@@ -49,5 +49,6 @@ publish-dev: build
 	$(UV) publish --index testpypi
 
 # Publish to PyPI (production). Requires: UV_PUBLISH_TOKEN=<pypi-token>
-publish: build
+# Clean first so only the current version (from pyproject.toml) is in dist/
+publish: clean build
 	UV_PUBLISH_TOKEN=$(shell cat .token) $(UV) publish
