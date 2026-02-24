@@ -66,6 +66,7 @@ class Agent:
         instructions: str = "",
         ranker: str = "default",
         retrieval_mode: str = "vector",
+        force_file_search: bool = False,
         file_search_max_chunks: int = 5,
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
@@ -80,6 +81,7 @@ class Agent:
             vector_store_id: Vector store ID for file_search.
             mcp_tools: List of MCP tool config dicts.
             instructions: Optional system prompt.
+            force_file_search: If True, pre-fetch RAG chunks and inject as context (no file_search tool).
             ranker: Ranker for file_search (default backend).
             retrieval_mode: "vector", "text", or "hybrid".
             file_search_max_chunks: Max chunks to retrieve.
@@ -97,6 +99,7 @@ class Agent:
             mcp_tools=mcp_tools,
             instructions=instructions,
             ranker=ranker,
+            force_file_search=force_file_search,
             retrieval_mode=retrieval_mode,
             file_search_max_chunks=file_search_max_chunks,
             file_search_score_threshold=file_search_score_threshold,
@@ -172,6 +175,7 @@ class Agent:
         *,
         messages: List[Dict[str, str]] | None = None,
         instructions: str = "",
+        force_file_search: bool = False,
         ranker: str = "default",
         retrieval_mode: str = "vector",
         file_search_max_chunks: int = 5,
@@ -194,6 +198,7 @@ class Agent:
             mcp_tools=mcp_tools,
             messages=messages,
             instructions=instructions,
+            force_file_search=force_file_search,
             ranker=ranker,
             retrieval_mode=retrieval_mode,
             file_search_max_chunks=file_search_max_chunks,

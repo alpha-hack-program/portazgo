@@ -243,6 +243,7 @@ def invoke_stream(
     *,
     messages: List[Dict[str, str]] | None = None,
     instructions: str = "",
+    force_file_search: bool = False,
     ranker: str = "default",
     retrieval_mode: str = "vector",
     file_search_max_chunks: int = 5,
@@ -253,6 +254,16 @@ def invoke_stream(
     Same as invoke but yields stream events: content_delta then done.
     If the backend does not support token-level streaming, yields one delta then done.
     """
+    if force_file_search:
+        chunks = get_rag_context(
+            client=client,
+            vector_store_id=vector_store_id,
+            query=input_text,
+            max_results=file_search_max_chunks,
+            score_threshold=file_search_score_threshold,
+            ranker=ranker,
+        )
+        input_text = _format_context_and_query(chunks, input_text)
     effective = _effective_input(input_text, messages)
     tools_list = _build_tools_list(
         vector_store_id,
@@ -262,6 +273,7 @@ def invoke_stream(
         file_search_max_chunks=file_search_max_chunks,
         file_search_score_threshold=file_search_score_threshold,
         file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+        include_file_search=not force_file_search,
     )
     request_config: Dict[str, Any] = {
         "model": model_id,
@@ -294,6 +306,7 @@ def invoke_stream(
         yield {"type": "done", "answer": full_answer, "contexts": [], "tool_calls": []}
         return
 
+    # input_text already has context injected when force_file_search; pass False to avoid double work
     result = invoke(
         input_text=input_text,
         client=client,
@@ -302,6 +315,7 @@ def invoke_stream(
         mcp_tools=mcp_tools,
         messages=messages,
         instructions=instructions,
+        force_file_search=False,
         ranker=ranker,
         retrieval_mode=retrieval_mode,
         file_search_max_chunks=file_search_max_chunks,
@@ -327,6 +341,7 @@ def generate_ragas_dataset(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    force_file_search: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Generate RAGAS dataset by querying Llama Stack Responses API for each question.
@@ -341,6 +356,7 @@ def generate_ragas_dataset(
         file_search_max_chunks=file_search_max_chunks,
         file_search_score_threshold=file_search_score_threshold,
         file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+        include_file_search=not force_file_search,
     )
 
     ragas_dataset: List[Dict[str, Any]] = []
@@ -353,9 +369,21 @@ def generate_ragas_dataset(
         ground_truth = item.get("ground_truth", "")
 
         try:
+            input_for_request = question
+            prefetched_chunks: List[str] = []
+            if force_file_search:
+                prefetched_chunks = get_rag_context(
+                    client=client,
+                    vector_store_id=vector_store_id,
+                    query=question,
+                    max_results=file_search_max_chunks,
+                    score_threshold=file_search_score_threshold,
+                    ranker=ranker,
+                )
+                input_for_request = _format_context_and_query(prefetched_chunks, question)
             request_config: Dict[str, Any] = {
                 "model": model_id,
-                "input": question,
+                "input": input_for_request,
                 "tools": tools_list,
             }
             if instructions and instructions.strip():
@@ -368,8 +396,10 @@ def generate_ragas_dataset(
             if isinstance(answer, str):
                 answer = strip_think_blocks(answer)
 
-            contexts = []
-            if hasattr(response, "output") and isinstance(response.output, list):
+            contexts: List[str] = []
+            if force_file_search and prefetched_chunks:
+                contexts = list(prefetched_chunks)
+            elif hasattr(response, "output") and isinstance(response.output, list):
                 for output_item in response.output:
                     if hasattr(output_item, "results") and isinstance(output_item.results, list):
                         for result in output_item.results:

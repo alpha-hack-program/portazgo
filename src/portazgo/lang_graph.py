@@ -58,6 +58,7 @@ def invoke_stream(
     *,
     messages: List[Dict[str, str]] | None = None,
     instructions: str = "",
+    force_file_search: bool = False,
     ranker: str = "default",
     retrieval_mode: str = "vector",
     file_search_max_chunks: int = 5,
@@ -84,6 +85,7 @@ def generate_ragas_dataset(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    force_file_search: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Generate RAGAS dataset using a LangGraph agent (placeholder).
