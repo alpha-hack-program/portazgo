@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "portazgo"
-version = "0.1.1"
+version = "0.1.2"
 description = "Pluggable agent SDK to talk to Llama Stack using a cohort of agents (default Llama Stack Responses API or LangGraph)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
