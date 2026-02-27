@@ -18,7 +18,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Any
 
 import httpx
 from llama_stack_client import LlamaStackClient
@@ -42,38 +41,7 @@ logging.basicConfig(
 # Add src so portazgo is importable when run from repo
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from portazgo import Agent
-
-
-def discover_mcp_tools(client: LlamaStackClient, tools: str) -> list[dict[str, Any]]:
-    """Discover MCP tools from Llama Stack. tools: 'none' (default), 'all', or 'tool1,tool2'."""
-    tool_filter = (tools or "").strip().lower()
-    if not tool_filter or tool_filter == "none":
-        return []
-    tool_groups = list(client.toolgroups.list())
-    requested = [] if tool_filter == "all" else [t.strip().lower() for t in tools.split(",") if t.strip()]
-    mcp_tools = []
-    for group in tool_groups:
-        if not getattr(group, "identifier", "").startswith("mcp::"):
-            continue
-        if getattr(group, "provider_id", None) and getattr(group, "provider_id") != "model-context-protocol":
-            continue
-        tool_name = (group.identifier.split("::", 1)[1] if "::" in group.identifier else group.identifier).lower()
-        if requested and tool_name not in requested:
-            continue
-        mcp_endpoint = getattr(group, "mcp_endpoint", None)
-        server_url = None
-        if mcp_endpoint:
-            server_url = getattr(mcp_endpoint, "uri", None) or (
-                mcp_endpoint.get("uri") if isinstance(mcp_endpoint, dict) else None
-            )
-        if server_url:
-            mcp_tools.append({
-                "type": "mcp",
-                "server_label": tool_name,
-                "server_url": server_url,
-            })
-    return mcp_tools
+from portazgo import Agent, discover_mcp_tools, resolve_vector_store_id
 
 
 def get_client() -> tuple[LlamaStackClient, str]:
@@ -88,21 +56,6 @@ def get_client() -> tuple[LlamaStackClient, str]:
     http_client = httpx.Client(verify=False, timeout=120)
     client = LlamaStackClient(base_url=base_url, http_client=http_client)
     return client, base_url
-
-
-def get_vector_store_id(client: LlamaStackClient, vector_store_name: str | None) -> str:
-    stores = list(client.vector_stores.list())
-    if not stores:
-        raise SystemExit("No vector stores found. Create one first.")
-    if vector_store_name:
-        matching = [s for s in stores if getattr(s, "name", None) == vector_store_name]
-        if not matching:
-            raise SystemExit(
-                f"No vector store named {vector_store_name!r}. "
-                f"Available: {[getattr(s, 'name', None) for s in stores]}"
-            )
-        return matching[0].id
-    return stores[-1].id
 
 
 def sanitize_question_for_server(question: str) -> str:
@@ -161,7 +114,7 @@ def main() -> int:
     except SystemExit:
         raise
     try:
-        vs_id = get_vector_store_id(client, vector_store_name)
+        vs_id = resolve_vector_store_id(client, vector_store_name)
         print(f"Vector store: {vector_store_name} (ID: {vs_id})")
     except Exception as e:
         err = str(e).lower()

@@ -22,14 +22,18 @@ for a future LangGraph-based implementation.
 
 from portazgo.agent import Agent, AgentType
 from portazgo.chats import ChatMessage, format_history_as_prefix
+from portazgo.llama_utils import discover_mcp_tools, list_vector_store_names, resolve_vector_store_id
 from portazgo.utils import extract_tool_calls, serialize_for_json, strip_think_blocks
 
 __all__ = [
     "Agent",
     "AgentType",
     "ChatMessage",
+    "discover_mcp_tools",
     "extract_tool_calls",
+    "list_vector_store_names",
     "format_history_as_prefix",
+    "resolve_vector_store_id",
     "serialize_for_json",
     "strip_think_blocks",
 ]
