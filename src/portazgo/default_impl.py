@@ -298,10 +298,10 @@ def invoke_stream(
         for chunk in resp_stream:
             text = getattr(chunk, "output_text", None) or getattr(chunk, "text", None) or getattr(chunk, "delta", "")
             if text and isinstance(text, str):
-                piece = strip_think_blocks(text) if text.strip() else text
-                if piece:
-                    buffer.append(piece)
-                    yield {"type": "content_delta", "delta": piece}
+                # Use raw text for streaming: strip_think_blocks(text).strip() would remove
+                # leading/trailing spaces from chunks like " tax", causing "Thetaxrate" instead of "The tax rate"
+                buffer.append(text)
+                yield {"type": "content_delta", "delta": text}
         full_answer = strip_think_blocks("".join(buffer))
         yield {"type": "done", "answer": full_answer, "contexts": [], "tool_calls": []}
         return
