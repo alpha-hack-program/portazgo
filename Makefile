@@ -36,7 +36,7 @@ test:
 coverage:
 	$(UV) run pytest tests --cov=portazgo --cov-report=term-missing
 
-build:
+build: install-dev
 	$(UV) run python -m build
 
 clean:
