@@ -156,6 +156,7 @@ def main() -> int:
         file_search_max_chunks=file_search_max_chunks,
         file_search_score_threshold=file_search_score_threshold,
         file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+        strip_think_blocks=False,
     ):
         if event["type"] == "content_delta":
             print(event["delta"], end="", flush=True)

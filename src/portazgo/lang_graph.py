@@ -37,6 +37,7 @@ def invoke(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    strip_think_blocks: bool = True,
 ) -> Dict[str, Any]:
     """
     Resolve a single input using a LangGraph agent (placeholder).
@@ -64,6 +65,7 @@ def invoke_stream(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    strip_think_blocks: bool = True,
 ) -> Iterator[Dict[str, Any]]:
     """Streaming invoke for LangGraph (placeholder). Raises NotImplementedError."""
     raise NotImplementedError(

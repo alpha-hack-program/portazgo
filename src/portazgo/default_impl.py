@@ -160,6 +160,7 @@ def invoke(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    strip_think_blocks: bool = True,
 ) -> Dict[str, Any]:
     """
     Resolve a single input with the given tools and vector store (one request).
@@ -208,7 +209,7 @@ def invoke(
 
     response = client.responses.create(**request_config)
     answer = getattr(response, "output_text", str(response))
-    if isinstance(answer, str):
+    if isinstance(answer, str) and strip_think_blocks:
         answer = strip_think_blocks(answer)
 
     contexts: List[str] = []
@@ -249,6 +250,7 @@ def invoke_stream(
     file_search_max_chunks: int = 5,
     file_search_score_threshold: float = 0.7,
     file_search_max_tokens_per_chunk: int = 512,
+    strip_think_blocks: bool = True,
 ) -> Iterator[Dict[str, Any]]:
     """
     Same as invoke but yields stream events: content_delta then done.
@@ -295,15 +297,38 @@ def invoke_stream(
 
     if stream_supported:
         buffer: List[str] = []
+        last_response: Any = None
         for chunk in resp_stream:
+            chunk_type = getattr(chunk, "type", None)
+            if chunk_type == "response.completed":
+                last_response = getattr(chunk, "response", None)
+                continue
             text = getattr(chunk, "output_text", None) or getattr(chunk, "text", None) or getattr(chunk, "delta", "")
             if text and isinstance(text, str):
                 # Use raw text for streaming: strip_think_blocks(text).strip() would remove
                 # leading/trailing spaces from chunks like " tax", causing "Thetaxrate" instead of "The tax rate"
                 buffer.append(text)
                 yield {"type": "content_delta", "delta": text}
-        full_answer = strip_think_blocks("".join(buffer))
-        yield {"type": "done", "answer": full_answer, "contexts": [], "tool_calls": []}
+        full_answer = "".join(buffer)
+        if strip_think_blocks:
+            full_answer = strip_think_blocks(full_answer)
+        tool_calls: List[Dict[str, Any]] = []
+        contexts: List[str] = []
+        if last_response:
+            tool_calls = extract_tool_calls(last_response)
+            if hasattr(last_response, "output") and isinstance(last_response.output, list):
+                for output_item in last_response.output:
+                    if hasattr(output_item, "results") and isinstance(output_item.results, list):
+                        for result in output_item.results:
+                            if hasattr(result, "text") and result.text:
+                                contexts.append(result.text)
+            for tc in tool_calls:
+                if tc.get("tool_name") != "file_search":
+                    resp = tc.get("response")
+                    if resp is not None:
+                        ctx = resp if isinstance(resp, str) else json.dumps(resp, ensure_ascii=False)
+                        contexts.append(ctx)
+        yield {"type": "done", "answer": full_answer, "contexts": contexts, "tool_calls": tool_calls}
         return
 
     # input_text already has context injected when force_file_search; pass False to avoid double work
@@ -321,6 +346,7 @@ def invoke_stream(
         file_search_max_chunks=file_search_max_chunks,
         file_search_score_threshold=file_search_score_threshold,
         file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+        strip_think_blocks=strip_think_blocks,
     )
     answer = result["answer"]
     if answer:

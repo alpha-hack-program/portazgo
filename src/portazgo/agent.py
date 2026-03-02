@@ -122,6 +122,7 @@ class Agent:
         file_search_max_chunks: int = 5,
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
+        strip_think_blocks: bool = True,
     ) -> Dict[str, Any]:
         """
         Resolve a single input with the given tools and vector store (normal agent call).
@@ -143,6 +144,8 @@ class Agent:
             file_search_max_chunks: Max chunks to retrieve.
             file_search_score_threshold: Min score for results (0–1).
             file_search_max_tokens_per_chunk: Max tokens per chunk.
+            strip_think_blocks: If True (default), remove <think>...</think> blocks from output.
+                Set False to see think tokens in the answer.
 
         Returns:
             Dict with keys: answer (str), contexts (list[str]), tool_calls (list[dict]).
@@ -163,6 +166,7 @@ class Agent:
             file_search_max_chunks=file_search_max_chunks,
             file_search_score_threshold=file_search_score_threshold,
             file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+            strip_think_blocks=strip_think_blocks,
         )
 
     def invoke_stream(
@@ -181,12 +185,16 @@ class Agent:
         file_search_max_chunks: int = 5,
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
+        strip_think_blocks: bool = True,
     ) -> Iterator[Dict[str, Any]]:
         """
         Same as invoke but yields stream events for real-time display (e.g. Streamlit).
 
         Yields: {"type": "content_delta", "delta": str} for each chunk;
         then {"type": "done", "answer": str, "contexts": list, "tool_calls": list}.
+
+        strip_think_blocks: If True (default), remove <think>...</think> blocks from output.
+            Set False to see think tokens in the streamed answer.
         """
         if mcp_tools is None:
             mcp_tools = []
@@ -204,4 +212,5 @@ class Agent:
             file_search_max_chunks=file_search_max_chunks,
             file_search_score_threshold=file_search_score_threshold,
             file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+            strip_think_blocks=strip_think_blocks,
         )
