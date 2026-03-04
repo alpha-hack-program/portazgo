@@ -12,6 +12,12 @@ Usage:
   uv run python examples/simple_invoke.py "Hello" --tools none
   uv run python examples/simple_invoke.py "Use the tools" --tools all
   uv run python examples/simple_invoke.py "Query cluster" --tools cluster-insights,compatibility-engine
+  uv run python examples/simple_invoke.py "What is 2+2?" --agent lang-graph
+  uv run python examples/simple_invoke.py "What is 2+2?" --validate
+  uv run python examples/simple_invoke.py "Query cluster" --agent lang-graph --pattern plan_execute --tools all
+
+  # Validation options via env vars (see _env_validation_options):
+  #   AGENT_VALIDATE_OUTPUT, AGENT_MAX_VALIDATION_RETRIES, AGENT_VALIDATION_RULES
 """
 
 import argparse
@@ -42,6 +48,37 @@ logging.basicConfig(
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from portazgo import Agent, discover_mcp_tools, resolve_vector_store_id
+
+
+def _env_validation_options() -> dict:
+    """
+    Read validation options from environment.
+
+    Env vars:
+      AGENT_VALIDATE_OUTPUT: enable validation and retry (default: false)
+      AGENT_MAX_VALIDATION_RETRIES: max validation retries (default: 1)
+      AGENT_VALIDATION_RULES: module:function path for custom validator, e.g. mymodule:my_validator (default: use built-in)
+    """
+    validate = (os.environ.get("AGENT_VALIDATE_OUTPUT") or "").strip().lower() in ("true", "1", "yes")
+    try:
+        max_retries = int(os.environ.get("AGENT_MAX_VALIDATION_RETRIES") or "1")
+    except ValueError:
+        max_retries = 1
+    rules_path = (os.environ.get("AGENT_VALIDATION_RULES") or "").strip()
+    validation_rules = None
+    if rules_path and ":" in rules_path:
+        mod_path, func_name = rules_path.rsplit(":", 1)
+        try:
+            import importlib
+            mod = importlib.import_module(mod_path)
+            validation_rules = getattr(mod, func_name)
+        except (ImportError, AttributeError) as e:
+            logging.getLogger(__name__).warning("Could not load AGENT_VALIDATION_RULES=%r: %s", rules_path, e)
+    return {
+        "validate_output": validate,
+        "max_validation_retries": max_retries,
+        "validation_rules": validation_rules,
+    }
 
 
 def get_client() -> tuple[LlamaStackClient, str]:
@@ -89,6 +126,25 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Do not replace ASCII apostrophe (') in the question (server may return 500 if it mis-parses JSON).",
     )
+    parser.add_argument(
+        "--agent",
+        default=os.environ.get("AGENT_TYPE", "default"),
+        choices=["default", "lang-graph"],
+        metavar="TYPE",
+        help="Agent backend: default (Llama Stack Responses API) or lang-graph.",
+    )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate answer and retry with feedback on failure (works with default and lang-graph).",
+    )
+    parser.add_argument(
+        "--pattern",
+        default=os.environ.get("AGENT_PATTERN", "simple"),
+        choices=["simple", "plan_execute"],
+        metavar="PATTERN",
+        help="Lang-graph pattern: simple (single call) or plan_execute (planner selects tools, then executor).",
+    )
     return parser.parse_args()
 
 
@@ -131,11 +187,18 @@ def main() -> int:
     else:
         print("MCP tools: none (file_search only)")
 
+    val_opts = _env_validation_options()
+    validate_output = getattr(args, "validate", False) or val_opts["validate_output"]
     print(f"Model: {model_id}")
+    print(f"Agent: {args.agent}")
+    if args.agent == "lang-graph":
+        print(f"Pattern: {args.pattern}")
+    if validate_output:
+        print("Validation: enabled")
     print(f"Question: {question}\n")
 
     # Initialize the agent
-    agent = Agent(type="default")
+    agent = Agent(type=args.agent)
     force_file_search = (os.environ.get("FORCE_FILE_SEARCH") or "").strip().lower() in ("true", "1", "yes")
     ranker = os.environ.get("RANKER") or "default"
     retrieval_mode = os.environ.get("RETRIEVAL_MODE") or "vector"
@@ -157,15 +220,21 @@ def main() -> int:
         file_search_max_chunks=file_search_max_chunks,
         file_search_score_threshold=file_search_score_threshold,
         file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+        pattern=getattr(args, "pattern", "simple"),
+        validate_output=validate_output,
+        max_validation_retries=val_opts["max_validation_retries"],
+        validation_rules=val_opts["validation_rules"],
     )
 
     print("Answer:", result["answer"])
-    if result.get("contexts"):
-        print(f"Contexts: {len(result['contexts'])} chunk(s)")
-        # Print the first 50 characters of each context
-        print(f"Contexts: {[c[:50] + '...' if len(c) > 50 else c for c in result['contexts']]}")
-    if result.get("tool_calls"):
-        print("Tool calls:", [t.get("tool_name") for t in result["tool_calls"]])
+    contexts = result.get("contexts") or []
+    tool_calls = result.get("tool_calls") or []
+    print(f"\nContexts: {len(contexts)} chunk(s)")
+    if contexts:
+        for i, c in enumerate(contexts):
+            preview = (c[:80] + "...") if len(c) > 80 else c
+            print(f"  [{i}] {preview}")
+    print(f"Tool calls: {len(tool_calls)} ({[t.get('tool_name') for t in tool_calls]})")
     return 0
 
 

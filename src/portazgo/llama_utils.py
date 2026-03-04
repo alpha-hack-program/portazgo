@@ -43,6 +43,36 @@ def _created_at_key(vs: Any) -> Any:
     return val if val is not None else datetime.min
 
 
+def get_mcp_tool_schemas(client: LlamaStackClient, mcp_tools: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, str]]]:
+    """
+    Fetch full tool schemas from Llama Stack for each MCP toolgroup.
+    Same data the Responses API uses when given MCP tools.
+
+    Returns dict mapping server_label -> list of {"name": str, "description": str} (full descriptions).
+    """
+    result: Dict[str, List[Dict[str, str]]] = {}
+    for t in mcp_tools:
+        label = t.get("server_label", "")
+        if not label:
+            continue
+        toolgroup_id = f"mcp::{label}"
+        try:
+            tools_list = client.tools.list(toolgroup_id=toolgroup_id)
+            if tools_list and isinstance(tools_list, list):
+                tools = []
+                for tool in tools_list:
+                    name = getattr(tool, "name", "") or ""
+                    desc = getattr(tool, "description", "") or ""
+                    if name:
+                        tools.append({"name": name, "description": desc})
+                result[label.lower()] = tools if tools else [{"name": label, "description": label}]
+            else:
+                result[label.lower()] = [{"name": label, "description": label}]
+        except Exception:
+            result[label.lower()] = [{"name": label, "description": label}]
+    return result
+
+
 def discover_mcp_tools(client: LlamaStackClient, tools: str) -> List[Dict[str, Any]]:
     """Discover MCP tools from Llama Stack. tools: '' or 'none' (no MCP tools), 'all', or 'tool1,tool2'."""
     tool_filter = (tools or "").strip().lower()

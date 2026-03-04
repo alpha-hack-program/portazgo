@@ -17,11 +17,12 @@
 Agent abstraction with pluggable backends (default vs lang-graph).
 """
 
-from typing import Any, Dict, Iterator, List, Literal
+from typing import Any, Callable, Dict, Iterator, List, Literal
 
 from portazgo import default_impl, lang_graph
 
 AgentType = Literal["default", "lang-graph"]
+PatternType = Literal["simple", "plan_execute"]
 
 _BACKENDS: Dict[AgentType, Any] = {
     "default": default_impl,
@@ -38,8 +39,7 @@ class Agent:
     type : "default" | "lang-graph"
         - "default": Uses Llama Stack Responses API (same logic as
           ragas_pipeline.generate_ragas_dataset and ragas_dataset_generator).
-        - "lang-graph": LangGraph-based implementation (stub; raises
-          NotImplementedError until implemented).
+        - "lang-graph": LangGraph-based implementation (delegates to default).
     """
 
     def __init__(self, type: AgentType = "default") -> None:
@@ -70,6 +70,7 @@ class Agent:
         file_search_max_chunks: int = 5,
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
+        pattern: PatternType = "simple",
     ) -> List[Dict[str, Any]]:
         """
         Generate a RAGAS-compatible dataset by querying the RAG system.
@@ -87,6 +88,7 @@ class Agent:
             file_search_max_chunks: Max chunks to retrieve.
             file_search_score_threshold: Min score for results (0–1).
             file_search_max_tokens_per_chunk: Max tokens per chunk.
+            pattern: For lang-graph: "simple" (single call) or "plan_execute" (planner selects tools, then executor).
 
         Returns:
             List of RAGAS entries: id, question, answer, contexts, ground_truth, etc.
@@ -104,6 +106,7 @@ class Agent:
             file_search_max_chunks=file_search_max_chunks,
             file_search_score_threshold=file_search_score_threshold,
             file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
+            pattern=pattern,
         )
 
     def invoke(
@@ -123,6 +126,10 @@ class Agent:
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
         strip_think_blocks: bool = True,
+        pattern: PatternType = "simple",
+        validate_output: bool = False,
+        max_validation_retries: int = 1,
+        validation_rules: Callable[[str, str], tuple[bool, str]] | None = None,
     ) -> Dict[str, Any]:
         """
         Resolve a single input with the given tools and vector store (normal agent call).
@@ -146,6 +153,10 @@ class Agent:
             file_search_max_tokens_per_chunk: Max tokens per chunk.
             strip_think_blocks: If True (default), remove <think>...</think> blocks from output.
                 Set False to see think tokens in the answer.
+            pattern: For lang-graph: "simple" (single call) or "plan_execute" (planner selects tools, then executor).
+            validate_output: If True, validate answer and retry with feedback on failure.
+            max_validation_retries: Max validation retries when validate_output=True.
+            validation_rules: Custom validator (answer, question) -> (passed, feedback).
 
         Returns:
             Dict with keys: answer (str), contexts (list[str]), tool_calls (list[dict]).
@@ -167,6 +178,10 @@ class Agent:
             file_search_score_threshold=file_search_score_threshold,
             file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
             strip_think_blocks=strip_think_blocks,
+            pattern=pattern,
+            validate_output=validate_output,
+            max_validation_retries=max_validation_retries,
+            validation_rules=validation_rules,
         )
 
     def invoke_stream(
@@ -186,6 +201,10 @@ class Agent:
         file_search_score_threshold: float = 0.7,
         file_search_max_tokens_per_chunk: int = 512,
         strip_think_blocks: bool = True,
+        pattern: PatternType = "simple",
+        validate_output: bool = False,
+        max_validation_retries: int = 1,
+        validation_rules: Callable[[str, str], tuple[bool, str]] | None = None,
     ) -> Iterator[Dict[str, Any]]:
         """
         Same as invoke but yields stream events for real-time display (e.g. Streamlit).
@@ -193,6 +212,7 @@ class Agent:
         Yields: {"type": "content_delta", "delta": str} for each chunk;
         then {"type": "done", "answer": str, "contexts": list, "tool_calls": list}.
 
+        validate_output: Not supported with streaming; raises ValueError. Use invoke() for validation.
         strip_think_blocks: If True (default), remove <think>...</think> blocks from output.
             Set False to see think tokens in the streamed answer.
         """
@@ -213,4 +233,8 @@ class Agent:
             file_search_score_threshold=file_search_score_threshold,
             file_search_max_tokens_per_chunk=file_search_max_tokens_per_chunk,
             strip_think_blocks=strip_think_blocks,
+            pattern=pattern,
+            validate_output=validate_output,
+            max_validation_retries=max_validation_retries,
+            validation_rules=validation_rules,
         )

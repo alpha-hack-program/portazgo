@@ -20,6 +20,8 @@ Use Agent(type="default") for Llama Stack Responses API, or Agent(type="lang-gra
 for a future LangGraph-based implementation.
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
 from portazgo.agent import Agent, AgentType
 from portazgo.chats import ChatMessage, format_history_as_prefix
 from portazgo.llama_utils import discover_mcp_tools, list_vector_store_names, resolve_vector_store_id
@@ -37,4 +39,8 @@ __all__ = [
     "serialize_for_json",
     "strip_think_blocks",
 ]
-__version__ = "0.1.0"
+
+try:
+    __version__ = version("portazgo")
+except PackageNotFoundError:
+    __version__ = "0.0.0.dev0"
