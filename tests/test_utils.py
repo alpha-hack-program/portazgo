@@ -15,7 +15,7 @@ class TestStripThinkBlocks:
 
     def test_single_think(self):
         text = "Before <think>internal thought</think> after"
-        assert strip_think_blocks(text) == "Before  after"
+        assert strip_think_blocks(text) == "Before after"
 
     def test_multiline_think(self):
         text = "Before <think>line1\nline2</think> after"

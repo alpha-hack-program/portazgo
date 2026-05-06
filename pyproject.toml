@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "portazgo"
-version = "0.2.0"
+version = "0.3.0"
 description = "Pluggable agent SDK to talk to Llama Stack using a cohort of agents (default Llama Stack Responses API or LangGraph)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -21,8 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    # Pin to 0.4.2 for compatibility with Llama Stack server 0.4.2 (426 if client is 0.5.x).
-    "llama-stack-client>=0.4.2,<0.5",
+    "llama-stack-client>=0.6.0,<0.7.0",
     "langgraph>=1.0.0,<2.0.0",
 ]
 

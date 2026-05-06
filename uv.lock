@@ -410,7 +410,7 @@ wheels = [
 
 [[package]]
 name = "llama-stack-client"
-version = "0.4.5"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -429,9 +429,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/df/71e10cf0b03d7da9cea6e2ce75f1a4175db8ba36ac8ebb5057af3a469525/llama_stack_client-0.4.5.tar.gz", hash = "sha256:5b4e5bcc205ce81211675583fe5a35f2882ec01f0e7c5f587bfa768bdbba027f", size = 368992 }
+sdist = { url = "https://files.pythonhosted.org/packages/19/01/47b32f2fb003b7f3fc24a401cd7b091892025f626dd07661647f64e3df68/llama_stack_client-0.6.1.tar.gz", hash = "sha256:13dabd74c29d5159cdcfca5a9e6f99c99f08aa688fa8403d6c5f6042b61519d2", size = 368690 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/77/34/02e4e3fcfd0d34af7c68e1a3b3b5d757e040c31188204ac84ec62d9b32a4/llama_stack_client-0.4.5-py3-none-any.whl", hash = "sha256:76335d3158e486a502f7db1eedc34974746480f6f7c1c06fd10a964d1a4564fc", size = 392341 },
+    { url = "https://files.pythonhosted.org/packages/57/bd/da2f43993b9b753f0465548b17efbbee492a6980fdd5e14fadf8566cdb1f/llama_stack_client-0.6.1-py3-none-any.whl", hash = "sha256:47aa4f47b591ffbd35b7be946552c4198006daaf57505898372d7bc7c1df510f", size = 391998 },
 ]
 
 [[package]]
@@ -680,7 +680,7 @@ wheels = [
 
 [[package]]
 name = "portazgo"
-version = "0.1.5"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "langgraph" },
@@ -700,7 +700,7 @@ dev = [
 requires-dist = [
     { name = "build", marker = "extra == 'dev'", specifier = ">=1.0" },
     { name = "langgraph", specifier = ">=1.0.0,<2.0.0" },
-    { name = "llama-stack-client", specifier = ">=0.4.2,<0.5" },
+    { name = "llama-stack-client", specifier = ">=0.6.0,<0.7.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = ">=1.0" },

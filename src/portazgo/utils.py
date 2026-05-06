@@ -24,7 +24,13 @@ def strip_think_blocks(text: str) -> str:
     """Remove <think>...</think> blocks from model output so the stored answer is clean."""
     if not text or not isinstance(text, str):
         return text
-    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    cleaned = re.sub(
+        r"\s*<think>.*?</think>\s*",
+        " ",
+        text,
+        flags=re.DOTALL,
+    )
+    return cleaned.strip()
 
 
 def serialize_for_json(val: Any) -> Any:
